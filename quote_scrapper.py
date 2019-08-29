@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
-from app import db, Quote, Tag
+from app import db
+from models.quote import Quote
+from models.tag import Tag
 
 response = requests.get('https://www.goodreads.com/quotes')
 
@@ -22,25 +24,25 @@ def scrap_quotes():
   quotes = soup.find_all(class_='quoteText')
   # remove all script tags
   [x.extract() for x in soup.find_all('script')]
-#   [x.extract() for x in soup.find_all('br')]
   for quote in quotes:
-    # del quote['script']
-    text = quote.get_text()
-    author = quote.find(class_='authorOrTitle').get_text().replace(',', '')
+    text = quote.get_text().strip()
+    author = quote.find(class_='authorOrTitle').get_text().replace(',', '').strip()
     tags = get_tags(quote)
 
-    save_quote(text, author, tags)
+    if len(text) < 1000:
+      save_quote(text, author, tags)
     # print(text)
     # print(author)
     # print('\n\n')
 
 def save_quote(text, author, quoteTags):
   #saves the quote to db
-  quote = Quote(text, author)
+  quote = Quote(author, text)
   db.session.add(quote)
-  db.session.flush()
+  db.session.commit()
 
   for qTag in quoteTags:
+    # todo: add logic to only save tags we have not seen before
     tag = Tag(qTag, quote.id)
     db.session.add(tag)
   # commit all the information

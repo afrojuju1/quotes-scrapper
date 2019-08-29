@@ -4,27 +4,24 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 
 db = SQLAlchemy(app)
-from quote_scrapper import scrap_quotes
 
-class Quote(db.Model):
-  __tablname__ = 'quotes'
-  id = db.Column(db.Integer, primary_key=True)
-  author = db.Column(db.Text())
-  text = db.Column(db.Text())
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:123456@localhost/quotesscrapper'
+app.debug = True
 
-  def __init__(self, author, text):
-    self.author = author
-    self.text = text
+# from models.quote import Quote
+# from models.tag import Tag
+#
+# db.create_all()
+# db.session.commit()
 
-class Tag(db.Model):
-  __tablname__ = 'tags'
-  id = db.Column(db.Integer, primary_key=True)
-  text = db.Column(db.String(200))
-  quote_id = db.Column(db.Integer, db.ForeignKey('quote.id'))
-
-  def __init__(self, text, quote_id):
-    self.text = text
-    self.quote_id = quote_id
+"""
+  steps to create db
+  1. pipenv run python or python
+  2. from app import db
+  3. db.create_all()
+  4. exit()
+"""
 
 @app.route('/')
 def index():
@@ -33,6 +30,10 @@ def index():
 @app.route('/start', methods=['POST'])
 def startScrapper():
   if request.method == 'POST':
+    from quote_scrapper import scrap_quotes
     scrap_quotes()
     return 'Scrapper started!!'
   return 'Naaaaaaaaahh B.'
+
+if __name__ == '__main__':
+  app.run()
