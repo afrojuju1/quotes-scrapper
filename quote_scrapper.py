@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from app import db, Quote, Tag
 
 response = requests.get('https://www.goodreads.com/quotes')
 
@@ -27,13 +28,23 @@ def scrap_quotes():
     text = quote.get_text()
     author = quote.find(class_='authorOrTitle').get_text().replace(',', '')
     tags = get_tags(quote)
-    print(text)
-    print(author)
-    print('\n\n')
 
-# How to remove characters
-# text = 'some string... this part will be removed.'
-# head, sep, tail = text.partition('...')
+    save_quote(text, author, tags)
+    # print(text)
+    # print(author)
+    # print('\n\n')
+
+def save_quote(text, author, quoteTags):
+  #saves the quote to db
+  quote = Quote(text, author)
+  db.session.add(quote)
+  db.session.flush()
+
+  for qTag in quoteTags:
+    tag = Tag(qTag, quote.id)
+    db.session.add(tag)
+  # commit all the information
+  db.session.commit()
 
 # run the function
-scrap_quotes()
+# scrap_quotes()
